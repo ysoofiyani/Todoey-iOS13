@@ -7,16 +7,19 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListsViewController: UITableViewController {
     
-    var itemArray = [Items] ()
     
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    var itemArray = [Item]()
+    
+    
+//    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         getItems()
         
     }
@@ -48,8 +51,9 @@ class TodoListsViewController: UITableViewController {
         let alert = UIAlertController(title: "Add New ToDo", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add ToDo", style: .default) { (action) in
             if let text = textField.text{
-                let newItem = Items()
+                let newItem = Item(context: self.context)
                 newItem.title = text
+                newItem.isDone = false
                 self.itemArray.append(newItem)
                 self.saveItems()
                 self.tableView.reloadData()
@@ -66,24 +70,37 @@ class TodoListsViewController: UITableViewController {
     }
     
     func saveItems() {
-        let encoder = PropertyListEncoder()
+        
         do{
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            try context.save()
         }catch{
             
         }
+        
+//        let encoder = PropertyListEncoder()
+//        do{
+//            let data = try encoder.encode(itemArray)
+//            try data.write(to: dataFilePath!)
+//        }catch{
+//
+//        }
     }
     
     func getItems() {
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do{
-                itemArray = try decoder.decode([Items].self, from: data)
-            }catch{
-                
-            }
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do{
+          itemArray = try context.fetch(request)
+        }catch{
+            
         }
+//        if let data = try? Data(contentsOf: dataFilePath!) {
+//            let decoder = PropertyListDecoder()
+//            do{
+//                itemArray = try decoder.decode([Items].self, from: data)
+//            }catch{
+//
+//            }
+//        }
     }
     
 }
