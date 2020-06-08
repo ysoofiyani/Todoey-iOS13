@@ -16,7 +16,7 @@ class TodoListsViewController: UITableViewController {
     var itemArray = [Item]()
     
     
-//    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    //    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -76,32 +76,43 @@ class TodoListsViewController: UITableViewController {
         }catch{
             
         }
-        
-//        let encoder = PropertyListEncoder()
-//        do{
-//            let data = try encoder.encode(itemArray)
-//            try data.write(to: dataFilePath!)
-//        }catch{
-//
-//        }
     }
     
-    func getItems() {
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+    func getItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
         do{
-          itemArray = try context.fetch(request)
+            itemArray = try context.fetch(request)
         }catch{
             
         }
-//        if let data = try? Data(contentsOf: dataFilePath!) {
-//            let decoder = PropertyListDecoder()
-//            do{
-//                itemArray = try decoder.decode([Items].self, from: data)
-//            }catch{
-//
-//            }
-//        }
     }
     
+}
+
+extension TodoListsViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text == "" {
+            getItems()
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+            tableView.reloadData()
+        }
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        if searchBar.text != "" {
+            let request: NSFetchRequest<Item> = Item.fetchRequest()
+            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+            getItems(with: request)
+        }else{
+            getItems()
+        }
+        DispatchQueue.main.async {
+            searchBar.resignFirstResponder()
+        }
+        tableView.reloadData()
+    }
 }
 
