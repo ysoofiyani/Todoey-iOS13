@@ -13,14 +13,17 @@ class TodoListsViewController: UITableViewController {
     
     
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    var itemArray = [Item]()
+    var itemArray = [ToDoItems]()
     
-    
-    //    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    var selectedCategory:ToDoCategories? {
+        didSet{
+            getItems()
+            navigationItem.title = selectedCategory?.name
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        getItems()
         
     }
     
@@ -48,12 +51,13 @@ class TodoListsViewController: UITableViewController {
     
     @IBAction func addButton(_ sender: UIBarButtonItem) {
         var textField = UITextField()
-        let alert = UIAlertController(title: "Add New ToDo", message: "", preferredStyle: .alert)
-        let action = UIAlertAction(title: "Add ToDo", style: .default) { (action) in
+        let alert = UIAlertController(title: "Add New ToDo Items", message: "", preferredStyle: .alert)
+        let action = UIAlertAction(title: "Add", style: .default) { (action) in
             if let text = textField.text{
-                let newItem = Item(context: self.context)
+                let newItem = ToDoItems(context: self.context)
                 newItem.title = text
                 newItem.isDone = false
+                newItem.category = self.selectedCategory
                 self.itemArray.append(newItem)
                 self.saveItems()
                 self.tableView.reloadData()
@@ -70,19 +74,25 @@ class TodoListsViewController: UITableViewController {
     }
     
     func saveItems() {
-        
         do{
             try context.save()
         }catch{
-            
+            print("SaveItems Error: \(error)")
         }
     }
     
-    func getItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func getItems(with request: NSFetchRequest<ToDoItems> = ToDoItems.fetchRequest(), predicate:NSPredicate? = nil) {
+        
+        let categoryPredicate = NSPredicate(format: "category.name MATCHES %@", selectedCategory!.name!)
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        }else {
+            request.predicate = categoryPredicate
+        }
         do{
             itemArray = try context.fetch(request)
         }catch{
-            
+            print("GetItems Error: \(error)")
         }
     }
     
@@ -102,10 +112,10 @@ extension TodoListsViewController: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         if searchBar.text != "" {
-            let request: NSFetchRequest<Item> = Item.fetchRequest()
-            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+            let request: NSFetchRequest<ToDoItems> = ToDoItems.fetchRequest()
+            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
             request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-            getItems(with: request)
+            getItems(with: request, predicate: predicate)
         }else{
             getItems()
         }
