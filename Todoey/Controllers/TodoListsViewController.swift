@@ -60,6 +60,24 @@ class TodoListsViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    
+    
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if let item = items?[indexPath.row]{
+            if editingStyle == .delete {
+                do {
+                    try realm.write {
+                        realm.delete(item)
+                    }
+                } catch {
+                    print(error)
+                }
+                
+            }
+               }
+        tableView.reloadData()
+    }
+    
     @IBAction func addButton(_ sender: UIBarButtonItem) {
         var textField = UITextField()
         let alert = UIAlertController(title: "Add New ToDo Items", message: "", preferredStyle: .alert)

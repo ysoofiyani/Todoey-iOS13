@@ -38,6 +38,22 @@ class CategoryTableViewController: UITableViewController {
         performSegue(withIdentifier: "categoryToItemsPage", sender: self)
     }
     
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if let category = categories?[indexPath.row]{
+            if editingStyle == .delete {
+                do {
+                    try realm.write {
+                        realm.delete(category)
+                    }
+                } catch {
+                    print(error)
+                }
+                
+            }
+               }
+        tableView.reloadData()
+    }
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! TodoListsViewController
         
