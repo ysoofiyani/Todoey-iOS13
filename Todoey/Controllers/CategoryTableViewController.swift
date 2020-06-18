@@ -11,7 +11,7 @@ import CoreData
 import RealmSwift
 
 
-class CategoryTableViewController: UITableViewController {
+class CategoryTableViewController: TodoyTableViewController {
     
     let realm = try! Realm()
     var categories: Results<Category>?
@@ -60,6 +60,19 @@ class CategoryTableViewController: UITableViewController {
         if let indexPath = tableView.indexPathForSelectedRow {
             destinationVC.selectedCategory = categories?[indexPath.row]
         }
+    }
+    
+    override func deleteCell(at indexPath: IndexPath) {
+        if let category = categories?[indexPath.row]{
+            do {
+                try realm.write {
+                    realm.delete(category)
+                }
+            } catch {
+                print(error)
+            }
+        }
+        tableView.reloadData()
     }
     
     

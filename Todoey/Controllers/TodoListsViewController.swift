@@ -10,7 +10,7 @@ import UIKit
 import CoreData
 import RealmSwift
 
-class TodoListsViewController: UITableViewController {
+class TodoListsViewController: TodoyTableViewController {
     
     let realm = try! Realm()
     var items:Results<Item>?
@@ -60,23 +60,19 @@ class TodoListsViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    
-    
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+    override func deleteCell(at indexPath: IndexPath) {
         if let item = items?[indexPath.row]{
-            if editingStyle == .delete {
-                do {
-                    try realm.write {
-                        realm.delete(item)
-                    }
-                } catch {
-                    print(error)
+            do {
+                try realm.write {
+                    realm.delete(item)
                 }
-                
+            } catch {
+                print(error)
             }
-               }
+        }
         tableView.reloadData()
     }
+    
     
     @IBAction func addButton(_ sender: UIBarButtonItem) {
         var textField = UITextField()
@@ -86,20 +82,19 @@ class TodoListsViewController: UITableViewController {
                 return
             }
             if let currentCategory = self.selectedCategory {
-                    do{
-                        try self.realm.write {
-                            let newItem = Item()
-                            newItem.title = text
-                            newItem.isDone = false
-                            newItem.dateCreated = Date()
-                            currentCategory.items.append(newItem)
-                        }
-                    }catch{
-                        print("SaveItems Error: \(error)")
+                do{
+                    try self.realm.write {
+                        let newItem = Item()
+                        newItem.title = text
+                        newItem.isDone = false
+                        newItem.dateCreated = Date()
+                        currentCategory.items.append(newItem)
                     }
-                    
+                }catch{
+                    print("SaveItems Error: \(error)")
                 }
-                self.tableView.reloadData()
+            }
+            self.tableView.reloadData()
         }
         
         alert.addAction(action)
@@ -107,15 +102,12 @@ class TodoListsViewController: UITableViewController {
             alertTextField.placeholder = "Create new ToDo"
             textField = alertTextField
         }
-        
         present(alert, animated: true, completion: nil)
     }
     
     func getItems() {
         items = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
-        
     }
-    
 }
 
 extension TodoListsViewController: UISearchBarDelegate {
